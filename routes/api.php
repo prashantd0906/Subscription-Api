@@ -12,9 +12,9 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
 
-    // Protected routes (requires JWT auth)
+    // Protected routes
     Route::middleware('auth:api')->group(function () {
-        // Authenticated user routes
+        // Authentic user routes
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
 
@@ -22,7 +22,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware(IsAdmin::class)->group(function () {
             Route::get('admin/dashboard', [AdminController::class, 'dashboard']);
 
-            // Plan management (create, update, delete)
+            // Plans
             Route::post('plans', [AdminController::class, 'store']);
             Route::put('plans/{id}', [AdminController::class, 'update']);
             Route::delete('plans/{id}', [AdminController::class, 'destroy']);
@@ -35,7 +35,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/active', [SubscriptionController::class, 'active']);
         });
 
-        // Reporting routes (admin only)
+        // Reporting routes (admins)
         Route::prefix('reports')->group(function () {
             Route::get('/total-users', [ReportController::class, 'totalUsersPerPlan']);
             Route::get('/active-subscriptions', [ReportController::class, 'activeSubscriptionsPerPlan']);
