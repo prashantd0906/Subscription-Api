@@ -7,7 +7,7 @@ use App\Interfaces\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    public function subscribe(int $userId, int $planId)
+    public function subscribe(int $userId, int $planId):Subscription
     {
         $plan = SubscriptionPlan::findOrFail($planId);
         $now = now();
@@ -21,6 +21,12 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
             'end_date'   => $now->copy()->addDays($plan->duration),
             'status'     => 'active',
         ]);
+    }
+
+    // New method: subscription with custom data
+    public function create(array $data)
+    {
+        return Subscription::create($data);
     }
 
     public function cancel(int $userId)
@@ -47,7 +53,7 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
             ->first();
     }
 
-    private function cancelActiveSubscription(int $userId): void
+    public function cancelActiveSubscription(int $userId): void
     {
         Subscription::where('user_id', $userId)
             ->where('status', 'active')

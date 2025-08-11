@@ -14,6 +14,7 @@ class IsAdmin
         if (!$user || $user->role?->name !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
         return $next($request);
     }
 }

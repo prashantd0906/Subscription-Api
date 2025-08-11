@@ -6,8 +6,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\RegisterRequest;
-use App\Http\Requests\LoginRequest;
+use App\Http\Requests\Api\V1\RegisterRequest;
+use App\Http\Requests\Api\V1\LoginRequest;
 use App\Services\AuthService;
 use App\Services\UserActivityService;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -17,7 +17,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthService $authService,
         private readonly UserActivityService $activityService
-        ) {}
+    ) {}
 
     public function register(RegisterRequest $request)
     {

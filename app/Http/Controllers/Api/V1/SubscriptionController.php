@@ -1,55 +1,43 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\SubscribeRequest;
+use App\Http\Requests\Api\V1\SubscribeRequest;
 use App\Services\SubscriptionService;
-use App\Services\UserActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class SubscriptionController extends Controller
 {
-    public function __construct(
-        protected SubscriptionService $service,
-        protected UserActivityService $activityService
-    ) {}
+    public function __construct(protected SubscriptionService $service) {}
 
     public function subscribe(SubscribeRequest $request): JsonResponse
     {
-        $userId = Auth::id();
-        $subscription = $this->service->subscribe($userId, $request->plan_id);
+        // Pass validated data array directly; user ID is handled inside service via Auth::id()
+        $subscription = $this->service->subscribe($request->validated());
 
-        $this->activityService->log(
-            $userId,
-            'subscribe',
-            'User subscribed to plan ID ' . $request->plan_id
-        );
-
-        return response()->json([
-            'message' => 'Subscribed successfully',
-            'data' => $subscription
-        ]);
+        return response()->json(['message' => 'Subscribed successfully', 'data' => $subscription]);
     }
 
     public function cancel(): JsonResponse
     {
-        $userId = Auth::id();
-        $this->service->cancel($userId);
+        $userId = Auth::id(); // Using facade here
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
 
-        $this->activityService->log(
-            $userId,
-            'cancel',
-            'User cancelled their subscription'
-        );
+        $this->service->cancel($userId);
 
         return response()->json(['message' => 'Subscription cancelled']);
     }
 
     public function active(): JsonResponse
     {
-        $userId = Auth::id();
+        $userId = Auth::id(); // Using facade here
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
         $subscription = $this->service->getActive($userId);
 
         if (!$subscription) {

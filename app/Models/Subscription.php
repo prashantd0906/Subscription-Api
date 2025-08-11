@@ -16,4 +16,11 @@ class Subscription extends Model
     {
         return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
     }
+
+    public function promoCodes()
+    {
+        return $this->belongsToMany(PromoCode::class, 'subscription_promo_codes')
+            ->withTimestamps()
+            ->withPivot('used_at');
+    }
 }
