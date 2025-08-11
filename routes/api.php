@@ -21,10 +21,11 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
 
         // Admin-only routes
-        Route::middleware(IsAdmin::class)->group(function () {
-            Route::get('admin/dashboard', [AdminController::class, 'dashboard']);
+        Route::prefix('admin')->middleware(IsAdmin::class)->group(function () {
+            Route::get('dashboard', [AdminController::class, 'dashboard']);
 
             // Plans management
+            Route::get('plans', [AdminController::class, 'index']);
             Route::post('plans', [AdminController::class, 'store']);
             Route::put('plans/{id}', [AdminController::class, 'update']);
             Route::delete('plans/{id}', [AdminController::class, 'destroy']);

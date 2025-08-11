@@ -16,6 +16,13 @@ class AdminController extends Controller
         return response()->json(['message' => 'Welcome Admin!']);
     }
 
+    public function index(): JsonResponse
+    {
+        $plans = $this->service->getAll();
+        return response()->json(['data' => $plans]);
+    }
+
+
     public function store(SubscriptionPlanRequest $request): JsonResponse
     {
         $plan = $this->service->create($request->validated());
