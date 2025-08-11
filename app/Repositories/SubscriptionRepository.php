@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Models\Subscription;
@@ -7,7 +8,7 @@ use App\Interfaces\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    public function subscribe(int $userId, int $planId):Subscription
+    public function subscribe(int $userId, int $planId): Subscription
     {
         $plan = SubscriptionPlan::findOrFail($planId);
         $now = now();
@@ -34,7 +35,7 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
         $subscription = $this->getActive($userId);
 
         if (!$subscription) {
-            throw new \Exception('No active subscription found.');
+            return response()->json(['message' => 'No active subscription found.'], 404);
         }
 
         $subscription->update([

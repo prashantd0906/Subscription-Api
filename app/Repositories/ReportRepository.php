@@ -55,16 +55,26 @@ class ReportRepository implements ReportRepositoryInterface
             )
             ->groupBy('month');
 
-        return DB::table(DB::raw("({$totalCancels->toSql()}) as cancels"))
-            ->mergeBindings($totalCancels)
-            ->joinSub($totalSubs, 'subs', function ($join) {
-                $join->on('cancels.month', '=', 'subs.month');
-            })
+        return DB::table('user_activity')
+            ->whereIn('action', ['subscription_cancelled', 'subscription_started'])
+            ->where('created_at', '>=', now()->subMonths($months))
             ->select(
-                'cancels.month',
-                DB::raw('ROUND((cancels.cancels / subs.new_subs) * 100, 2) as churn_rate')
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+                DB::raw("COUNT(CASE WHEN action = 'subscription_cancelled' THEN 1 END) as cancels"),
+                DB::raw("COUNT(CASE WHEN action = 'subscription_started' THEN 1 END) as new_subs"),
+                DB::raw("
+            ROUND(
+                COALESCE(
+                    (COUNT(CASE WHEN action = 'subscription_cancelled' THEN 1 END) /
+                     NULLIF(COUNT(CASE WHEN action = 'subscription_started' THEN 1 END), 0)
+                    ) * 100,
+                    0
+                ), 2
+            ) as churn_rate
+        ")
             )
-            ->orderBy('cancels.month')
+            ->groupBy('month')
+            ->orderBy('month')
             ->get();
     }
 }
