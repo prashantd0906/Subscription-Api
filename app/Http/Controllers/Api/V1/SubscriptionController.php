@@ -15,7 +15,10 @@ class SubscriptionController extends Controller
     {
         $subscription = $this->service->subscribe($request->validated());
 
-        return response()->json(['message' => 'Subscribed successfully', 'data' => $subscription]);
+        return response()->json([
+            'message' => 'Subscribed successfully',
+            'data' => $subscription
+        ]);
     }
 
     public function cancel(): JsonResponse

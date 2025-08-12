@@ -20,6 +20,16 @@ class SubscriptionPromoCodeController extends Controller
             $request->validated()['promo_code_id']
         );
 
-        return ApiResponse::success($result, 'Promo code assigned successfully.');
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Promo code assigned to subscription successfully.',
+            'data'    => [
+                'subscription_id' => $result->subscription_id,
+                'promo_code_id'   => $result->promo_code_id,
+                'discount'        => $result->promoCode->discount ?? null,
+                'valid_till'      => $result->promoCode->valid_till ?? null,
+                'applied_at'      => $result->applied_at
+            ]
+        ]);
     }
 }
