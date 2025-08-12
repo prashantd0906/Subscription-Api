@@ -13,7 +13,6 @@ class SubscriptionController extends Controller
 
     public function subscribe(SubscribeRequest $request): JsonResponse
     {
-        // Pass validated data array directly; user ID is handled inside service via Auth::id()
         $subscription = $this->service->subscribe($request->validated());
 
         return response()->json(['message' => 'Subscribed successfully', 'data' => $subscription]);
