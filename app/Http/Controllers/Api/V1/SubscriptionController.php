@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\SubscribeRequest;
 use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
@@ -10,6 +12,12 @@ use Illuminate\Support\Facades\Auth;
 class SubscriptionController extends Controller
 {
     public function __construct(protected SubscriptionService $service) {}
+
+    public function allPlans()
+    {
+        $plans = $this->service->getAllPlans();
+        return ApiResponse::success($plans, 'All subscription plans retrieved successfully');
+    }
 
     public function subscribe(SubscribeRequest $request): JsonResponse
     {

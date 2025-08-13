@@ -17,6 +17,11 @@ class SubscriptionService
         protected PromoCodeService $promoCodeService
     ) {}
 
+    public function getAllPlans()
+    {
+        return $this->subscriptionRepository->getAll();
+    }
+
     public function subscribe(array $data)
     {
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);

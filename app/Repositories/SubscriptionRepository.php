@@ -8,6 +8,11 @@ use App\Interfaces\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
+    public function getAll()
+    {
+        return SubscriptionPlan::all();
+    }
+
     public function subscribe(int $userId, int $planId): Subscription
     {
         $plan = SubscriptionPlan::findOrFail($planId);

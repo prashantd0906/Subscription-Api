@@ -11,17 +11,19 @@ use App\Http\Controllers\Api\V2\PromoCodeController;
 use App\Http\Controllers\Api\V2\SubscriptionPromoCodeController;
 
 Route::prefix('v1')->group(function () {
-    // Public auth routes
+
+    // Public Auth routes
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
 
-    // Protected routes (requires JWT auth)
+    // Protected routes (JWT required)
     Route::middleware('jwt.auth')->group(function () {
+
         // Authenticated user routes
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
 
-        // User Activity (user sees own activities)
+        // User activity
         Route::get('user/activity', [UserActivityController::class, 'myActivity']);
 
         // Subscription routes
@@ -29,14 +31,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [SubscriptionController::class, 'subscribe']);
             Route::post('/cancel', [SubscriptionController::class, 'cancel']);
             Route::get('/active', [SubscriptionController::class, 'active']);
+            Route::get('/plans', [SubscriptionController::class, 'allPlans']);
         });
 
-        // Admin routes
+        // Admin routes (requires admin)
         Route::prefix('admin')->middleware(IsAdmin::class)->group(function () {
-            Route::get('dashboard', [AdminController::class, 'dashboard']);
-            Route::get('notifications', [AdminController::class, 'notifications']); // Admin notifications
 
-            // Plans management
+            // Dashboard & notifications
+            Route::get('dashboard', [AdminController::class, 'dashboard']);
+            Route::get('notifications', [AdminController::class, 'notifications']);
+
+            // Plan management
             Route::prefix('plans')->group(function () {
                 Route::get('/', [AdminController::class, 'index']);
                 Route::post('/', [AdminController::class, 'store']);
@@ -44,11 +49,11 @@ Route::prefix('v1')->group(function () {
                 Route::delete('/{id}', [AdminController::class, 'destroy']);
             });
 
-            // Admin can view all user activities
+            // View all user activities
             Route::get('user-activity', [UserActivityController::class, 'allActivities']);
         });
 
-        // Reporting routes (admins only)
+        // Reports routes (admins only)
         Route::prefix('reports')->middleware(IsAdmin::class)->group(function () {
             Route::get('/total-users', [ReportController::class, 'totalUsersPerPlan']);
             Route::get('/active-subscriptions', [ReportController::class, 'activeSubscriptionsPerPlan']);
@@ -58,8 +63,10 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-// V2 ROUTES (Promo Codes & Subscription Promo Codes)
+// V2 Routes (Promo Codes)
+
 Route::prefix('v2')->middleware(['jwt.auth', IsAdmin::class])->group(function () {
+
     // Promo Code CRUD
     Route::post('/promo-codes', [PromoCodeController::class, 'store']);
     Route::get('/promo-codes', [PromoCodeController::class, 'index']);
@@ -67,6 +74,6 @@ Route::prefix('v2')->middleware(['jwt.auth', IsAdmin::class])->group(function ()
     Route::put('/promo-codes/{id}', [PromoCodeController::class, 'update']);
     Route::delete('/promo-codes/{id}', [PromoCodeController::class, 'destroy']);
 
-    // Assign promo code to subscription
+    // Assign promo code to a subscription
     Route::post('/subscription-promo', [SubscriptionPromoCodeController::class, 'assign']);
 });
