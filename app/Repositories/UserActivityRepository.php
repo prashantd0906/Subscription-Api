@@ -15,4 +15,24 @@ class UserActivityRepository implements UserActivityRepositoryInterface
             'description' => $description
         ]);
     }
+    public function getByUserId(int $userId)
+    {
+        return UserActivity::where('user_id', $userId)
+            ->latest()
+            ->get();
+    }
+
+    public function getAllWithFilters(?string $action = null, ?string $startDate = null, ?string $endDate = null)
+    {
+        $query = UserActivity::query();
+
+        if ($action) {
+            $query->where('action', $action);
+        }
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        return $query->latest()->get();
+    }
 }

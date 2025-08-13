@@ -22,7 +22,6 @@ class AdminController extends Controller
         return response()->json(['data' => $plans]);
     }
 
-
     public function store(SubscriptionPlanRequest $request): JsonResponse
     {
         $plan = $this->service->create($request->validated());

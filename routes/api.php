@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\UserActivityController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Api\V2\PromoCodeController;
 use App\Http\Controllers\Api\V2\SubscriptionPromoCodeController;
@@ -20,15 +21,22 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
 
-        // Admin-only routes
+        // User Activity (User can view own, Admin can view all)
+        Route::get('user/activity', [UserActivityController::class, 'myActivity']); // Authenticated user only
+
         Route::prefix('admin')->middleware(IsAdmin::class)->group(function () {
             Route::get('dashboard', [AdminController::class, 'dashboard']);
 
             // Plans management
-            Route::get('plans', [AdminController::class, 'index']);
-            Route::post('plans', [AdminController::class, 'store']);
-            Route::put('plans/{id}', [AdminController::class, 'update']);
-            Route::delete('plans/{id}', [AdminController::class, 'destroy']);
+            Route::prefix('plans')->group(function () {
+                Route::get('/', [AdminController::class, 'index']);
+                Route::post('/', [AdminController::class, 'store']);
+                Route::put('/{id}', [AdminController::class, 'update']);
+                Route::delete('/{id}', [AdminController::class, 'destroy']);
+            });
+
+            // Admin can view all user activities
+            Route::get('user-activity', [UserActivityController::class, 'allActivities']);
         });
 
         // Subscription routes
@@ -49,7 +57,6 @@ Route::prefix('v1')->group(function () {
 });
 
 // V2 ROUTES (Promo Codes & Subscription Promo Codes)
-
 Route::prefix('v2')->middleware(['jwt.auth', IsAdmin::class])->group(function () {
     // Promo Code CRUD
     Route::post('/promo-codes', [PromoCodeController::class, 'store']);
