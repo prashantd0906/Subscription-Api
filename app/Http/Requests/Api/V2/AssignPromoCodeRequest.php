@@ -8,7 +8,7 @@ class AssignPromoCodeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Admin middleware already handles role check
+        return true;
     }
 
     public function rules(): array
