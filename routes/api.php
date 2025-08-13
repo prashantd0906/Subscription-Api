@@ -21,11 +21,20 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
 
-        // User Activity (User can view own, Admin can view all)
-        Route::get('user/activity', [UserActivityController::class, 'myActivity']); // Authenticated user only
+        // User Activity (user sees own activities)
+        Route::get('user/activity', [UserActivityController::class, 'myActivity']);
 
+        // Subscription routes
+        Route::prefix('subscription')->group(function () {
+            Route::post('/', [SubscriptionController::class, 'subscribe']);
+            Route::post('/cancel', [SubscriptionController::class, 'cancel']);
+            Route::get('/active', [SubscriptionController::class, 'active']);
+        });
+
+        // Admin routes
         Route::prefix('admin')->middleware(IsAdmin::class)->group(function () {
             Route::get('dashboard', [AdminController::class, 'dashboard']);
+            Route::get('notifications', [AdminController::class, 'notifications']); // Admin notifications
 
             // Plans management
             Route::prefix('plans')->group(function () {
@@ -37,13 +46,6 @@ Route::prefix('v1')->group(function () {
 
             // Admin can view all user activities
             Route::get('user-activity', [UserActivityController::class, 'allActivities']);
-        });
-
-        // Subscription routes
-        Route::prefix('subscription')->group(function () {
-            Route::post('/', [SubscriptionController::class, 'subscribe']);
-            Route::post('/cancel', [SubscriptionController::class, 'cancel']);
-            Route::get('/active', [SubscriptionController::class, 'active']);
         });
 
         // Reporting routes (admins only)
@@ -65,6 +67,6 @@ Route::prefix('v2')->middleware(['jwt.auth', IsAdmin::class])->group(function ()
     Route::put('/promo-codes/{id}', [PromoCodeController::class, 'update']);
     Route::delete('/promo-codes/{id}', [PromoCodeController::class, 'destroy']);
 
-    // Assign promocode to subscription
+    // Assign promo code to subscription
     Route::post('/subscription-promo', [SubscriptionPromoCodeController::class, 'assign']);
 });
