@@ -3,30 +3,24 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Services\UserActivityService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class UserActivityController extends Controller
 {
-    public function __construct(protected UserActivityService $service) {}
+    public function __construct(protected UserActivityService $activityService) {}
 
-    // For a user to see their own activities
+    // Fetch authenticated user's activity
     public function myActivity(): JsonResponse
     {
-        $logs = $this->service->getUserActivities(Auth::id());
-        return response()->json(['data' => $logs]);
+        $activities = $this->activityService->getUserActivities(Auth::id());
+        return response()->json(['data' => $activities]);
     }
 
-    // For admin to see all activities (with optional filters)
-    public function allActivities(Request $request): JsonResponse
+    // For admins: fetch all users' activities
+    public function allActivities(): JsonResponse
     {
-        $logs = $this->service->getAllActivities(
-            $request->query('action'),
-            $request->query('start_date'),
-            $request->query('end_date')
-        );
-
-        return response()->json(['data' => $logs]);
+        $activities = $this->activityService->getUserActivities(null); 
+        return response()->json(['data' => $activities]);
     }
 }

@@ -6,50 +6,81 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SubscriptionPlanRequest;
 use App\Services\SubscriptionPlanService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 
 class AdminController extends Controller
 {
     public function __construct(protected SubscriptionPlanService $service) {}
 
-    // Admin dashboard welcome
     public function dashboard(): JsonResponse
     {
-        return response()->json(['message' => 'Welcome Admin!']);
+        $admin = Auth::user();
+
+        $notificationsCount = DatabaseNotification::where('notifiable_id', $admin->id)
+            ->where('notifiable_type', User::class)
+            ->count();
+
+        return response()->json([
+            'total_users'          => User::count(),
+            'active_subscriptions' => Subscription::whereStatus('active')->count(),
+            'total_plans'          => SubscriptionPlan::count(),
+            'notifications_count'  => $notificationsCount,
+            'message'              => 'Admin Dashboard Data'
+        ]);
     }
 
-    // List all subscription plans
     public function index(): JsonResponse
     {
-        $plans = $this->service->getAll();
-        return response()->json(['data' => $plans]);
+        return response()->json([
+            'data' => $this->service->getAll()
+        ]);
     }
 
-    // Create a new subscription plan
     public function store(SubscriptionPlanRequest $request): JsonResponse
     {
         $plan = $this->service->create($request->validated());
-        return response()->json(['message' => 'Plan created successfully', 'data' => $plan]);
+
+        return response()->json([
+            'message' => 'Plan created successfully',
+            'data'    => $plan
+        ]);
     }
 
-    // Update an existing plan
     public function update(SubscriptionPlanRequest $request, int $id): JsonResponse
     {
         $plan = $this->service->update($id, $request->validated());
-        return response()->json(['message' => 'Plan updated successfully', 'data' => $plan]);
+
+        return response()->json([
+            'message' => 'Plan updated successfully',
+            'data'    => $plan
+        ]);
     }
 
-    // Delete a plan
     public function destroy(int $id): JsonResponse
     {
         $this->service->delete($id);
-        return response()->json(['message' => 'Plan deleted successfully']);
-    }
 
-    // Fetch admin notifications
+        return response()->json([
+            'message' => 'Plan deleted successfully'
+        ]);
+    }
+    
     public function notifications(): JsonResponse
     {
-        $notifications = Auth::user()->notifications; // Only for authenticated admin
-        return response()->json(['data' => $notifications]);
+        $admin = Auth::user();
+
+        $notifications = DatabaseNotification::where('notifiable_id', $admin->id)
+            ->where('notifiable_type', User::class)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'count' => $notifications->count(),
+            'data'  => $notifications
+        ]);
     }
 }

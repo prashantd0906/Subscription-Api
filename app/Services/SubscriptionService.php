@@ -5,16 +5,18 @@ namespace App\Services;
 use App\Models\SubscriptionPlan;
 use App\Repositories\SubscriptionRepository;
 use App\Services\PromoCodeService;
+use App\Services\UserActivityService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Role;
 use App\Notifications\NewSubscriptionNotification;
-use Exception;
 
 class SubscriptionService
 {
     public function __construct(
         protected SubscriptionRepository $subscriptionRepository,
-        protected PromoCodeService $promoCodeService
+        protected PromoCodeService $promoCodeService,
+        protected UserActivityService $activityService
     ) {}
 
     public function getAllPlans()
@@ -22,65 +24,96 @@ class SubscriptionService
         return $this->subscriptionRepository->getAll();
     }
 
-    public function subscribe(array $data)
+    public function subscribe(array $data): array
     {
+        $userId = Auth::id();
+        if (!$userId) {
+            return ['success' => false, 'message' => 'Unauthenticated.'];
+        }
+
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);
-        $finalPrice = $plan->price;
 
-        // Cancel existing active subscription
-        $this->subscriptionRepository->cancelActiveSubscription(Auth::id());
+        // Calculate final price (with optional promo)
+        [$finalPrice, $discountApplied, $promo] = $this->applyPromo(
+            $data['promo_code'] ?? null,
+            (float) $plan->price
+        );
 
-        // Create new subscription record
-        $subscription = $this->subscriptionRepository->create([
-            'user_id'    => Auth::id(),
-            'plan_id'    => $plan->id,
-            'price'      => $finalPrice,
-            'start_date' => now(),
-            'end_date'   => now()->copy()->addDays($plan->duration),
-            'status'     => 'active',
-        ]);
+        // Cancel previous subscription
+        $this->cancelPrevious($userId);
 
-        // Apply promo code if provided
-        if (!empty($data['promo_code'])) {
-            $promo = $this->promoCodeService->validatePromoCode($data['promo_code']);
+        // Create new subscription
+        $subscription = $this->createSubscription($userId, $plan);
 
-            if (!$promo) {
-                // Delete the subscription
-                $subscription->delete();
-                return [
-                    'success' => false,
-                    'message' => 'Invalid or expired promo code.'
-                ];
-            }
-
-            $discountAmount = ($finalPrice * $promo->discount) / 100;
-            $finalPrice -= $discountAmount;
-
-            $subscription->update(['price' => $finalPrice]);
+        // Attach promo if applied
+        if ($promo) {
             $subscription->promoCodes()->attach($promo->id, ['used_at' => now()]);
         }
 
-        //Send notification to admin
-        $admin = User::where('role', 'admin')->first();
-        if ($admin) {
-            $admin->notify(
-                new NewSubscriptionNotification(
-                    Auth::user()->name,
-                    $plan->name
-                )
+        return [
+            'success'          => true,
+            'message'          => $promo
+                ? "Subscribed successfully with promo code {$promo->code} applied."
+                : 'Subscribed successfully',
+            'original_price'   => $plan->price,
+            'discount_applied' => $discountApplied,
+            'final_price'      => $finalPrice,
+            'subscription'     => $subscription,
+        ];
+    }
+
+    public function cancel(int $userId)
+    {
+        $subscription = $this->subscriptionRepository->getActive($userId);
+
+        if ($subscription) {
+            $this->subscriptionRepository->cancel($userId);
+
+            $this->activityService->log(
+                $userId,
+                'subscription_cancelled',
+                "Cancelled subscription for plan ID {$subscription->plan_id}"
             );
         }
 
         return $subscription;
     }
 
-    public function cancel(int $userId)
-    {
-        return $this->subscriptionRepository->cancel($userId);
-    }
-
     public function getActive(int $userId)
     {
         return $this->subscriptionRepository->getActive($userId);
+    }
+
+    private function applyPromo(?string $promoCode, float $originalPrice): array
+    {
+        if (!$promoCode) {
+            return [$originalPrice, 0.0, null];
+        }
+
+        $promo = $this->promoCodeService->validatePromoCode($promoCode);
+        if (!$promo) {
+            throw new \InvalidArgumentException('Invalid or expired promo code.');
+        }
+
+        $discount = ($originalPrice * (float) $promo->discount) / 100;
+        $final    = max(0, $originalPrice - $discount);
+
+        return [$final, $discount, $promo];
+    }
+
+    private function cancelPrevious(int $userId): void
+    {
+        $this->subscriptionRepository->cancelActiveSubscription($userId);
+    }
+
+    private function createSubscription(int $userId, SubscriptionPlan $plan)
+    {
+        return $this->subscriptionRepository->create([
+            'user_id'    => $userId,
+            'plan_id'    => $plan->id,
+            'start_date' => now(),
+            'end_date'   => now()->copy()->addDays((int) $plan->duration),
+            'status'     => 'active',
+        ]);
     }
 }

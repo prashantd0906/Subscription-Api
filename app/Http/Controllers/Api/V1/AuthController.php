@@ -15,12 +15,10 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
-        private readonly UserActivityService $activityService
     ) {}
 
     public function register(RegisterRequest $request)
     {
-        // Validation already runs automatically
         $validated = $request->validated();
 
         $result = $this->authService->register($validated);

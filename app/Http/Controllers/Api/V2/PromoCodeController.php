@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Api\V2;
+
 use App\Models\PromoCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\PromoCodeRequest;
@@ -11,9 +13,10 @@ class PromoCodeController extends Controller
 {
     public function __construct(private readonly PromoCodeService $promoCodeService) {}
 
-    public function index():JsonResponse
+    public function index(): JsonResponse
     {
-        $promoCodes = PromoCode::all();
+        $promoCodes = PromoCode::where('valid_till', '>', now())->get();
+
         return response()->json([
             'status' => 'success',
             'data' => $promoCodes

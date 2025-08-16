@@ -15,7 +15,6 @@ class SubscriptionPromoCodeRepository
             'applied_at'      => now(),
         ]);
 
-        // Load promo code relationship
         $subscriptionPromoCode->load('promoCode');
 
         return $subscriptionPromoCode;

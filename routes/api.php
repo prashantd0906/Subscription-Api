@@ -10,6 +10,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Api\V2\PromoCodeController;
 use App\Http\Controllers\Api\V2\SubscriptionPromoCodeController;
 
+//  V1 API
 Route::prefix('v1')->group(function () {
 
     // Public Auth routes
@@ -23,15 +24,17 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
 
-        // User activity
-        Route::get('user/activity', [UserActivityController::class, 'myActivity']);
-
         // Subscription routes
         Route::prefix('subscription')->group(function () {
             Route::post('/', [SubscriptionController::class, 'subscribe']);
             Route::post('/cancel', [SubscriptionController::class, 'cancel']);
             Route::get('/active', [SubscriptionController::class, 'active']);
             Route::get('/plans', [SubscriptionController::class, 'allPlans']);
+        });
+
+        // User activity routes
+        Route::prefix('user')->group(function () {
+            Route::get('activity', [UserActivityController::class, 'myActivity']); // user own activity
         });
 
         // Admin routes (requires admin)
@@ -49,7 +52,7 @@ Route::prefix('v1')->group(function () {
                 Route::delete('/{id}', [AdminController::class, 'destroy']);
             });
 
-            // View all user activities
+            // Admin view all user activities
             Route::get('user-activity', [UserActivityController::class, 'allActivities']);
         });
 
@@ -63,17 +66,17 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-// V2 Routes (Promo Codes)
+// V2 API (Promo Codes)
+Route::prefix('v2')->middleware('jwt.auth')->group(function () {
 
-Route::prefix('v2')->middleware(['jwt.auth', IsAdmin::class])->group(function () {
-
-    // Promo Code CRUD
-    Route::post('/promo-codes', [PromoCodeController::class, 'store']);
+    // Accessible by both users & admins
     Route::get('/promo-codes', [PromoCodeController::class, 'index']);
-    Route::get('/promo-codes/{id}', [PromoCodeController::class, 'show']);
-    Route::put('/promo-codes/{id}', [PromoCodeController::class, 'update']);
-    Route::delete('/promo-codes/{id}', [PromoCodeController::class, 'destroy']);
 
-    // Assign promo code to a subscription
-    Route::post('/subscription-promo', [SubscriptionPromoCodeController::class, 'assign']);
+    // Admin-only
+    Route::middleware(IsAdmin::class)->group(function () {
+        Route::post('/promo-codes', [PromoCodeController::class, 'store']);
+        Route::put('/promo-codes/{id}', [PromoCodeController::class, 'update']);
+        Route::delete('/promo-codes/{id}', [PromoCodeController::class, 'destroy']);
+        Route::post('/subscription-promo', [SubscriptionPromoCodeController::class, 'assign']);
+    });
 });

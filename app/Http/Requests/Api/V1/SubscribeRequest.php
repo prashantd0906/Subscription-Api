@@ -15,6 +15,7 @@ class SubscribeRequest extends FormRequest
     {
         return [
             'plan_id' => 'required|exists:subscription_plans,id',
+            'promo_code' => 'nullable|string',
         ];
     }
 }

@@ -18,6 +18,7 @@ class PromoCode extends Model
     ];
 
     protected $casts = [
+        'discount' => 'float',
         'valid_till' => 'datetime',
     ];
 

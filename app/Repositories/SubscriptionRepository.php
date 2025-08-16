@@ -28,8 +28,7 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
             'status'     => 'active',
         ]);
     }
-
-    // New method: subscription with custom data
+    
     public function create(array $data)
     {
         return Subscription::create($data);

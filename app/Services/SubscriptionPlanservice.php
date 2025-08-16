@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Interfaces\SubscriptionPlanRepositoryInterface;
@@ -7,7 +8,7 @@ class SubscriptionPlanService
 {
     public function __construct(protected SubscriptionPlanRepositoryInterface $repo) {}
 
-    
+
     public function getAll()
     {
         return $this->repo->getAll();

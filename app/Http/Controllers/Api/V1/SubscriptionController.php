@@ -6,53 +6,60 @@ use App\Http\Controllers\Controller;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\SubscribeRequest;
 use App\Services\SubscriptionService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class SubscriptionController extends Controller
 {
     public function __construct(protected SubscriptionService $service) {}
 
-    public function allPlans()
+    public function allPlans(): JsonResponse
     {
-        $plans = $this->service->getAllPlans();
-        return ApiResponse::success($plans, 'All subscription plans retrieved successfully');
+        return ApiResponse::success(
+            $this->service->getAllPlans(),
+            'All subscription plans retrieved successfully'
+        );
     }
 
     public function subscribe(SubscribeRequest $request): JsonResponse
     {
-        $subscription = $this->service->subscribe($request->validated());
+        $result = $this->service->subscribe($request->validated());
 
-        return response()->json([
-            'message' => 'Subscribed successfully',
-            'data' => $subscription
-        ]);
+        if (!($result['success'] ?? true)) {
+            return ApiResponse::error($result['message'] ?? 'Subscription failed', 400);
+        }
+
+        return ApiResponse::success([
+            'original_price'   => $result['original_price'] ?? null,
+            'discount_applied' => $result['discount_applied'] ?? 0,
+            'final_price'      => $result['final_price'] ?? null,
+            'subscription'     => $result['subscription'] ?? null,
+        ], 'Subscribed successfully');
     }
 
     public function cancel(): JsonResponse
     {
-        $userId = Auth::id(); // Using facade here
+        $userId = Auth::id();
         if (!$userId) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
+            return ApiResponse::error('Unauthenticated', 401);
         }
 
         $this->service->cancel($userId);
-
-        return response()->json(['message' => 'Subscription cancelled']);
+        return ApiResponse::success([], 'Subscription cancelled');
     }
 
     public function active(): JsonResponse
     {
-        $userId = Auth::id(); // Using facade here
+        $userId = Auth::id();
         if (!$userId) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
+            return ApiResponse::error('Unauthenticated', 401);
         }
 
         $subscription = $this->service->getActive($userId);
-
         if (!$subscription) {
-            return response()->json(['message' => 'No active subscription found'], 404);
+            return ApiResponse::error('No active subscription found', 404);
         }
-        return response()->json(['data' => $subscription]);
+
+        return ApiResponse::success(['subscription' => $subscription]);
     }
 }

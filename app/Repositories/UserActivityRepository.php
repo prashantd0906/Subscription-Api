@@ -1,38 +1,28 @@
 <?php
-
 namespace App\Repositories;
 
-use App\Models\UserActivity;
 use App\Interfaces\UserActivityRepositoryInterface;
+use App\Models\UserActivity;
 
 class UserActivityRepository implements UserActivityRepositoryInterface
 {
+
     public function log(int $userId, string $action, string $description): void
     {
         UserActivity::create([
-            'user_id'    => $userId,
-            'action'     => $action,
-            'description' => $description
+            'user_id' => $userId,
+            'action' => $action,
+            'description' => $description,
         ]);
     }
-    public function getByUserId(int $userId)
-    {
-        return UserActivity::where('user_id', $userId)
-            ->latest()
-            ->get();
-    }
-
-    public function getAllWithFilters(?string $action = null, ?string $startDate = null, ?string $endDate = null)
+    public function getUserActivities(?int $userId = null)
     {
         $query = UserActivity::query();
 
-        if ($action) {
-            $query->where('action', $action);
-        }
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
         }
 
-        return $query->latest()->get();
+        return $query->orderBy('created_at', 'desc')->get();
     }
 }

@@ -18,8 +18,7 @@ class AuthRepository implements AuthRepositoryInterface
             'role_id'  => 1,
         ]);
 
-        $token = JWTAuth::fromUser($user);
-        return compact('user', 'token');
+        return $user;
     }
 
     public function login(array $credentials)

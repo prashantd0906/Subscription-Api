@@ -13,8 +13,9 @@ class PromoCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => 'required|string|unique:promo_codes,code',
-            'discount' => 'required|numeric|min:0|max:100',
+            // use promo_code
+            'promo_code' => 'required|string|unique:promo_codes,code',
+            'discount'   => 'required|numeric|min:0|max:100',
             'valid_till' => 'required|date|after:today'
         ];
     }
