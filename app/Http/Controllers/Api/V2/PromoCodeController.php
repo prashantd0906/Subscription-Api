@@ -17,10 +17,7 @@ class PromoCodeController extends Controller
     {
         $promoCodes = PromoCode::where('valid_till', '>', now())->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $promoCodes
-        ]);
+        return ApiResponse::success($promoCodes, 'Valid promo codes retrieved successfully');
     }
     public function store(PromoCodeRequest $request)
     {

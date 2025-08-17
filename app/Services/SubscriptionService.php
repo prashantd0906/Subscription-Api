@@ -33,17 +33,32 @@ class SubscriptionService
 
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);
 
-        // Calculate final price (with optional promo)
-        [$finalPrice, $discountApplied, $promo] = $this->applyPromo(
+        // Calculate final price with promo handling
+        [$finalPrice, $discountApplied, $promo, $error] = $this->applyPromo(
             $data['promo_code'] ?? null,
             (float) $plan->price
         );
 
-        // Cancel previous subscription
+        //If invalid promo, stop here
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => $error,
+            ];
+        }
+
+        // Cancel previous subscription if exists
         $this->cancelPrevious($userId);
 
         // Create new subscription
         $subscription = $this->createSubscription($userId, $plan);
+
+        // Log subscription activity
+        $this->activityService->log(
+            $userId,
+            'subscription_started',
+            "Subscribed to plan {$plan->name}"
+        );
 
         // Attach promo if applied
         if ($promo) {
@@ -61,6 +76,7 @@ class SubscriptionService
             'subscription'     => $subscription,
         ];
     }
+
 
     public function cancel(int $userId)
     {
@@ -87,18 +103,18 @@ class SubscriptionService
     private function applyPromo(?string $promoCode, float $originalPrice): array
     {
         if (!$promoCode) {
-            return [$originalPrice, 0.0, null];
+            return [$originalPrice, 0.0, null,null];
         }
 
         $promo = $this->promoCodeService->validatePromoCode($promoCode);
         if (!$promo) {
-            throw new \InvalidArgumentException('Invalid or expired promo code.');
+            return [$originalPrice, 0.0, null, 'Invalid or expired promo code.'];
         }
 
         $discount = ($originalPrice * (float) $promo->discount) / 100;
         $final    = max(0, $originalPrice - $discount);
 
-        return [$final, $discount, $promo];
+        return [$final, $discount, $promo,null];
     }
 
     private function cancelPrevious(int $userId): void

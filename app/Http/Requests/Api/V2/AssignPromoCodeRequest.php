@@ -14,8 +14,8 @@ class AssignPromoCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'subscription_id' => 'required|exists:subscriptions,id',
-            'promo_code_id' => 'required|exists:promo_codes,id',
+            'subscription_id' => 'required|integer|exists:subscriptions,id',
+            'promo_code_id'   => 'required|integer|exists:promo_codes,id',
         ];
     }
 }

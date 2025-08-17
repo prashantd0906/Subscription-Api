@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SubscriptionPlanRequest;
 use App\Services\SubscriptionPlanService;
 use Illuminate\Http\JsonResponse;
+use App\Helpers\ApiResponse;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -16,13 +17,17 @@ class AdminController extends Controller
 {
     public function __construct(protected SubscriptionPlanService $service) {}
 
+    private function getAdminNotifications($admin)
+    {
+        return DatabaseNotification::where('notifiable_id', $admin->id)
+            ->where('notifiable_type', User::class);
+    }
+
     public function dashboard(): JsonResponse
     {
         $admin = Auth::user();
 
-        $notificationsCount = DatabaseNotification::where('notifiable_id', $admin->id)
-            ->where('notifiable_type', User::class)
-            ->count();
+        $notificationsCount = $this->getAdminNotifications($admin)->count();
 
         return response()->json([
             'total_users'          => User::count(),
@@ -35,52 +40,48 @@ class AdminController extends Controller
 
     public function index(): JsonResponse
     {
-        return response()->json([
-            'data' => $this->service->getAll()
-        ]);
+        return ApiResponse::success(
+            $this->service->getAll(),
+            'Fetched all subscription plans successfully'
+        );
     }
 
     public function store(SubscriptionPlanRequest $request): JsonResponse
     {
         $plan = $this->service->create($request->validated());
 
-        return response()->json([
-            'message' => 'Plan created successfully',
-            'data'    => $plan
-        ]);
+        return ApiResponse::success($plan, 'Plan created successfully');
     }
 
     public function update(SubscriptionPlanRequest $request, int $id): JsonResponse
     {
         $plan = $this->service->update($id, $request->validated());
 
-        return response()->json([
-            'message' => 'Plan updated successfully',
-            'data'    => $plan
-        ]);
+        return ApiResponse::success(
+            $plan,
+            'Plan updated successfully'
+        );
     }
 
     public function destroy(int $id): JsonResponse
     {
         $this->service->delete($id);
 
-        return response()->json([
-            'message' => 'Plan deleted successfully'
-        ]);
+        return ApiResponse::success(
+            null,
+            'Plan deleted successfully'
+        );
     }
-    
+
     public function notifications(): JsonResponse
     {
         $admin = Auth::user();
 
-        $notifications = DatabaseNotification::where('notifiable_id', $admin->id)
-            ->where('notifiable_type', User::class)
-            ->latest()
-            ->get();
+        $notifications = $this->getAdminNotifications($admin)->latest()->get();
 
-        return response()->json([
+        return ApiResponse::success([
             'count' => $notifications->count(),
-            'data'  => $notifications
-        ]);
+            'data'  => $notifications,
+        ], 'Admin notifications fetched successfully');
     }
 }
