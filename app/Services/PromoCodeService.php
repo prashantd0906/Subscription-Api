@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Interfaces\PromoCodeRepositoryInterface;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PromoCodeService
 {
@@ -33,7 +34,10 @@ class PromoCodeService
         $promo = $this->promoCodeRepo->find($id);
 
         if (!$promo) {
-            throw new \InvalidArgumentException("Promo code not found.");
+            throw new HttpResponseException(response()->json([
+                'status'  => 'error',
+                'message' => 'Promo code not found.'
+            ], 404));
         }
 
         return $this->promoCodeRepo->update($promo, [
@@ -42,12 +46,16 @@ class PromoCodeService
             'valid_till' => $data['valid_till'],
         ]);
     }
+
     public function deletePromoCode(int $id): void
     {
         $promo = $this->promoCodeRepo->find($id);
 
         if (!$promo) {
-            throw new \InvalidArgumentException("Promo code not found.");
+            throw new HttpResponseException(response()->json([
+                'status'  => 'error',
+                'message' => 'Promo code not found.'
+            ], 404));
         }
 
         $this->promoCodeRepo->delete($promo);
