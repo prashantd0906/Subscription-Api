@@ -24,4 +24,18 @@ class PromoCodeController extends Controller
         $promo = $this->promoCodeService->createPromoCode($request->validated());
         return ApiResponse::success($promo, 'Promo code created successfully.');
     }
+
+    public function update(PromoCodeRequest $request, int $id): JsonResponse
+    {
+        $promo = $this->promoCodeService->updatePromoCode($id, $request->validated());
+
+        return ApiResponse::success($promo, 'Promo code updated successfully.');
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $this->promoCodeService->deletePromoCode($id);
+
+        return ApiResponse::success(null, 'Promo code deleted successfully.');
+    }
 }

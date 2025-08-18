@@ -14,8 +14,24 @@ class PromoCodeRepository implements PromoCodeRepositoryInterface
         return $this->model->create($data);
     }
 
+    public function find(int $id)
+    {
+        return $this->model->find($id);
+    }
+
     public function findByCode(string $code)
     {
         return PromoCode::whereRaw('LOWER(code) = ?', [strtolower($code)])->first();
+    }
+
+    public function update(PromoCode $promo, array $data)
+    {
+        $promo->update($data);
+        return $promo;
+    }
+
+    public function delete(PromoCode $promo)
+    {
+        $promo->delete();
     }
 }

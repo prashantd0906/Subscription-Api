@@ -27,4 +27,29 @@ class PromoCodeService
 
         return $promo;
     }
+
+    public function updatePromoCode(int $id, array $data)
+    {
+        $promo = $this->promoCodeRepo->find($id);
+
+        if (!$promo) {
+            throw new \InvalidArgumentException("Promo code not found.");
+        }
+
+        return $this->promoCodeRepo->update($promo, [
+            'code'       => $data['promo_code'],
+            'discount'   => $data['discount'],
+            'valid_till' => $data['valid_till'],
+        ]);
+    }
+    public function deletePromoCode(int $id): void
+    {
+        $promo = $this->promoCodeRepo->find($id);
+
+        if (!$promo) {
+            throw new \InvalidArgumentException("Promo code not found.");
+        }
+
+        $this->promoCodeRepo->delete($promo);
+    }
 }

@@ -37,6 +37,22 @@
 | GET    | /v1/admin/dashboard     | Admin  |
 | GET    | /v1/admin/notifications | Admin  |
 
+POST
+{
+    "name": "Premium Plan",
+    "price": 49.99,
+    "duration": 30,
+    "description": "Access to all premium features for 30 days."
+}
+
+
+PUT
+{
+  "name": "Premium Plan",
+  "price": 299.99,
+  "duration": 30,
+  "description": "Access to all premium features"
+}
 
 | Method | URL                                   | Access |
 | ------ | ------------------------------------- | ------ |
@@ -53,3 +69,26 @@
 | PUT    | /v2/promo-codes/{id}   | Admin        |
 | DELETE | /v2/promo-codes/{id}   | Admin        |
 | POST   | /v2/subscription-promo | Admin        |
+
+{
+    "promo_code": "CCUBE50",
+    "discount": 50,
+    "valid_till": "2025-10-31T23:59:59Z"
+}
+
+
+POST
+{
+  "subscription_id": 101,
+  "promo_code_id": 5
+}
+
+POST
+{
+    "promo_code": "RAINY25",
+    "discount": 25,
+    "valid_till": "2025-09-30T23:59:59Z"
+}
+
+
+

@@ -33,13 +33,13 @@ class SubscriptionService
 
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);
 
-        // Calculate final price with promo handling
+        // Calculate final price with promo code
         [$finalPrice, $discountApplied, $promo, $error] = $this->applyPromo(
             $data['promo_code'] ?? null,
             (float) $plan->price
         );
 
-        //If invalid promo, stop here
+        //If invalid promo
         if ($error) {
             return [
                 'success' => false,
@@ -47,7 +47,7 @@ class SubscriptionService
             ];
         }
 
-        // Cancel previous subscription if exists
+        // Cancel previous subscription
         $this->cancelPrevious($userId);
 
         // Create new subscription
@@ -76,7 +76,6 @@ class SubscriptionService
             'subscription'     => $subscription,
         ];
     }
-
 
     public function cancel(int $userId)
     {
