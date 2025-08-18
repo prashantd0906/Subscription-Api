@@ -26,9 +26,9 @@ class RegisterRequest extends FormRequest
                 'regex:/^[a-zA-Z][\w.-]*@[a-zA-Z][\w.-]*\.[a-zA-Z]{2,}$/'
             ],
             'password' => [
-                'required',          // must be present
-                'string',            // must be a string
-                'min:6',             // at least 6 characters
+                'required',          
+                'string',           
+                'min:6',             
                 'confirmed',         // must match password_confirmation
                 'not_regex:/^\s*$/'  // cannot be empty or spaces only
             ],
@@ -39,6 +39,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'password.not_regex' => 'The password cannot be empty or just spaces.',
+            'email.unique' => 'You have already registered with this email. Please login.',
         ];
     }
 

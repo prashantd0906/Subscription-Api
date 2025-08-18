@@ -14,6 +14,7 @@ class SubscriptionPromoCode extends Model
     protected $fillable = [
         'subscription_id',
         'promo_code_id',
+        'used_at',
     ];
 
     public function promoCode()

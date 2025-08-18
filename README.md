@@ -5,6 +5,14 @@
 | POST   | /v1/auth/logout   | User (JWT) |
 | GET    | /v1/auth/me       | User (JWT) |
 
+{
+  "name": "Prashant Kumar",
+  "email": "prashant@example.com",
+  "password": "prashant123",
+  "password_confirmation": "prashant123"
+}
+
+
 
 | Method | URL                     | Access     |
 | ------ | ----------------------- | ---------- |
