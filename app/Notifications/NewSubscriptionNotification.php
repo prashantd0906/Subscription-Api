@@ -3,20 +3,24 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewSubscriptionNotification extends Notification
+class SubscriptionActivityNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(
-        public string $userName,
-        public string $planName,
-    ) {}
+    protected $user;
+    protected $plan;
+    protected $action; // subscribed | cancelled
 
-    public function via(object $notifiable): array
+    public function __construct($user, $plan, string $action)
+    {
+        $this->user = $user;
+        $this->plan = $plan;
+        $this->action = $action;
+    }
+
+    public function via($notifiable)
     {
         return ['database'];
     }
@@ -24,7 +28,10 @@ class NewSubscriptionNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'message' => "{$this->userName} subscribed to {$this->planName}."
+            'subscriber_name' => $this->user->name,
+            'plan_name'       => $this->plan->name,
+            'action'          => $this->action,
+            'timestamp'       => now()->toDateTimeString(),
         ];
     }
 }

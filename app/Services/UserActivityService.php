@@ -9,6 +9,10 @@ class UserActivityService
         protected UserActivityRepositoryInterface $repo
     ) {}
 
+    public function getAll()
+    {
+        return $this->repo->getUserActivities();
+    }
     // Log a user action
     public function log(int $userId, string $action, string $description): void
     {

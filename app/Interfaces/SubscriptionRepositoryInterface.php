@@ -8,7 +8,7 @@ interface SubscriptionRepositoryInterface
 {
     public function create(array $data);
     public function subscribe(int $userId, int $planId):Subscription;
-    public function cancel(int $userId);
+    public function cancel(int $userId, int $planId): ?Subscription;
     public function getActive(int $userId);
     public function cancelActiveSubscription(int $userId): void;
 }

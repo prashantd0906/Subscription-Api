@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SubscriptionPlanRequest;
 use App\Services\SubscriptionPlanService;
+use App\Services\UserActivityService;
 use Illuminate\Http\JsonResponse;
 use App\Helpers\ApiResponse;
-use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Subscription;
@@ -15,19 +15,50 @@ use App\Models\SubscriptionPlan;
 
 class AdminController extends Controller
 {
-    public function __construct(protected SubscriptionPlanService $service) {}
+    public function __construct(
+        protected SubscriptionPlanService $service,
+        protected UserActivityService $activityService
+    ) {}
 
-    private function getAdminNotifications($admin)
-    {
-        return DatabaseNotification::where('notifiable_id', $admin->id)
-            ->where('notifiable_type', User::class);
-    }
-
-    public function dashboard(): JsonResponse
+    /**
+     * Fetch all admin notifications
+     */
+    public function notifications(): JsonResponse
     {
         $admin = Auth::user();
 
-        $notificationsCount = $this->getAdminNotifications($admin)->count();
+        // Fetch latest notifications
+        $notifications = $admin->notifications()->latest()->get();
+
+        // Transform for cleaner JSON
+        $data = $notifications->map(function ($notification) {
+            return [
+                'id'              => $notification->id,
+                'subscriber_name' => $notification->data['subscriber_name'] ?? null,
+                'plan_name'       => $notification->data['plan_name'] ?? null,
+                'action'          => $notification->data['action'] ?? null,
+                'timestamp'       => $notification->data['timestamp'] ?? null,
+                'created_at'      => $notification->created_at->toDateTimeString(),
+                'read_at'         => $notification->read_at?->toDateTimeString(),
+            ];
+        });
+
+        return ApiResponse::success([
+            'count' => $data->count(),
+            'data'  => $data,
+        ], 'Admin notifications fetched successfully');
+    }
+
+    /**
+     * Dashboard stats for admin
+     */
+    public function dashboard(): JsonResponse
+    {
+        // Count all subscription-related activities
+        $notificationsCount = $this->activityService
+            ->getAll()
+            ->whereIn('action', ['subscription_started', 'subscription_cancelled'])
+            ->count();
 
         return response()->json([
             'total_users'          => User::count(),
@@ -38,6 +69,9 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Manage subscription plans
+     */
     public function index(): JsonResponse
     {
         return ApiResponse::success(
@@ -57,31 +91,13 @@ class AdminController extends Controller
     {
         $plan = $this->service->update($id, $request->validated());
 
-        return ApiResponse::success(
-            $plan,
-            'Plan updated successfully'
-        );
+        return ApiResponse::success($plan, 'Plan updated successfully');
     }
 
     public function destroy(int $id): JsonResponse
     {
         $this->service->delete($id);
 
-        return ApiResponse::success(
-            null,
-            'Plan deleted successfully'
-        );
-    }
-
-    public function notifications(): JsonResponse
-    {
-        $admin = Auth::user();
-
-        $notifications = $this->getAdminNotifications($admin)->latest()->get();
-
-        return ApiResponse::success([
-            'count' => $notifications->count(),
-            'data'  => $notifications,
-        ], 'Admin notifications fetched successfully');
+        return ApiResponse::success(null, 'Plan deleted successfully');
     }
 }

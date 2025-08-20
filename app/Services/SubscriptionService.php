@@ -6,10 +6,11 @@ use App\Models\SubscriptionPlan;
 use App\Repositories\SubscriptionRepository;
 use App\Services\PromoCodeService;
 use App\Services\UserActivityService;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-use App\Models\Role;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewSubscriptionNotification;
+use Carbon\Carbon;
 
 class SubscriptionService
 {
@@ -26,8 +27,8 @@ class SubscriptionService
 
     public function subscribe(array $data): array
     {
-        $userId = Auth::id();
-        if (!$userId) {
+        $user = Auth::user();
+        if (!$user) {
             return ['success' => false, 'message' => 'Unauthenticated.'];
         }
 
@@ -39,31 +40,30 @@ class SubscriptionService
             (float) $plan->price
         );
 
-        //If invalid promo
         if ($error) {
-            return [
-                'success' => false,
-                'message' => $error,
-            ];
+            return ['success' => false, 'message' => $error];
         }
 
         // Cancel previous subscription
-        $this->cancelPrevious($userId);
+        $this->cancelPrevious($user->id);
 
         // Create new subscription
-        $subscription = $this->createSubscription($userId, $plan);
+        $subscription = $this->createSubscription($user->id, $plan);
 
         // Log subscription activity
         $this->activityService->log(
-            $userId,
+            $user->id,
             'subscription_started',
             "Subscribed to plan {$plan->name}"
         );
 
-        // Attach promo if applied
+        // Attach promo code if applied
         if ($promo) {
             $subscription->promoCodes()->attach($promo->id, ['used_at' => now()]);
         }
+
+        // ✅ Notify all admins
+        $this->notifyAdmins($user->name, $plan->name, 'started');
 
         return [
             'success'          => true,
@@ -77,18 +77,29 @@ class SubscriptionService
         ];
     }
 
-    public function cancel(int $userId)
+    public function cancel(int $userId, int $planId)
     {
-        $subscription = $this->subscriptionRepository->getActive($userId);
+        $subscription = $this->subscriptionRepository->cancel($userId, $planId);
 
         if ($subscription) {
-            $this->subscriptionRepository->cancel($userId);
+            $subscription->update([
+                'end_date'     => Carbon::parse($subscription->start_date)
+                                       ->addDays($subscription->plan_duration),
+                'cancelled_at' => now(),
+                'status'       => 'cancelled',
+            ]);
 
             $this->activityService->log(
                 $userId,
                 'subscription_cancelled',
-                "Cancelled subscription for plan ID {$subscription->plan_id}"
+                "Cancelled subscription for plan ID {$planId}"
             );
+
+            // ✅ Notify admins of cancellation
+            $subscriber = User::find($userId);
+            $planName   = $subscription->plan->name ?? 'Unknown Plan';
+
+            $this->notifyAdmins($subscriber?->name ?? 'Unknown User', $planName, 'cancelled');
         }
 
         return $subscription;
@@ -99,10 +110,12 @@ class SubscriptionService
         return $this->subscriptionRepository->getActive($userId);
     }
 
+    // ----------------- PRIVATE METHODS -----------------
+
     private function applyPromo(?string $promoCode, float $originalPrice): array
     {
         if (!$promoCode) {
-            return [$originalPrice, 0.0, null,null];
+            return [$originalPrice, 0.0, null, null];
         }
 
         $promo = $this->promoCodeService->validatePromoCode($promoCode);
@@ -113,7 +126,7 @@ class SubscriptionService
         $discount = ($originalPrice * (float) $promo->discount) / 100;
         $final    = max(0, $originalPrice - $discount);
 
-        return [$final, $discount, $promo,null];
+        return [$final, $discount, $promo, null];
     }
 
     private function cancelPrevious(int $userId): void
@@ -123,12 +136,32 @@ class SubscriptionService
 
     private function createSubscription(int $userId, SubscriptionPlan $plan)
     {
+        $durationDays = (int) ($plan->duration ?? 30);
+        $start = now();
+        $end   = $start->copy()->addDays($durationDays);
+
         return $this->subscriptionRepository->create([
-            'user_id'    => $userId,
-            'plan_id'    => $plan->id,
-            'start_date' => now(),
-            'end_date'   => now()->copy()->addDays((int) $plan->duration),
-            'status'     => 'active',
+            'user_id'       => $userId,
+            'plan_id'       => $plan->id,
+            'plan_duration' => $durationDays,
+            'start_date'    => $start,
+            'end_date'      => $end,
+            'status'        => 'active',
         ]);
+    }
+
+    /**
+     * Notify all admins about a subscription event
+     */
+    private function notifyAdmins(string $subscriberName, string $planName, string $action): void
+    {
+        $admins = User::where('role_id', 1)->get();
+
+        if ($admins->isNotEmpty()) {
+            Notification::send(
+                $admins,
+                new NewSubscriptionNotification($subscriberName, $planName, $action)
+            );
+        }
     }
 }

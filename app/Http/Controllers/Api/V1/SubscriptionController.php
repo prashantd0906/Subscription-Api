@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\SubscribeRequest;
+use App\Http\Requests\Api\V1\CancelSubscriptionRequest;
 use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
@@ -37,16 +38,25 @@ class SubscriptionController extends Controller
         ], 'Subscribed successfully');
     }
 
-    public function cancel(): JsonResponse
-    {
-        $userId = Auth::id();
-        if (!$userId) {
-            return ApiResponse::error('Unauthenticated', 401);
-        }
-
-        $this->service->cancel($userId);
-        return ApiResponse::success([], 'Subscription cancelled');
+    public function cancel(CancelSubscriptionRequest $request): JsonResponse
+{
+    $userId = Auth::id();
+    if (!$userId) {
+        return ApiResponse::error('Unauthenticated', 401);
     }
+
+    // Get validated plan_id from request
+    $planId = $request->validated()['plan_id'];
+
+    $subscription = $this->service->cancel($userId, $planId);
+
+    if (!$subscription) {
+        return ApiResponse::error('No active subscription found for this plan', 404);
+    }
+
+    return ApiResponse::success(['subscription' => $subscription], 'Subscription cancelled successfully');
+}
+
 
     public function active(): JsonResponse
     {

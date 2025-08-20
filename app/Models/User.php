@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -10,7 +11,6 @@ class User extends Authenticatable implements JWTSubject
     use Notifiable;
 
     protected $fillable = ['name', 'email', 'password', 'role_id'];
-
     protected $hidden = ['password'];
 
     public function role()
@@ -18,7 +18,8 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Role::class);
     }
 
-    public function subscription(){
+    public function subscription()
+    {
         return $this->hasOne(Subscription::class);
     }
 

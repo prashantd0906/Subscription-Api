@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subscription extends Model
 {
-    protected $fillable = ['user_id', 'plan_id', 'start_date', 'end_date', 'cancelled_at', 'status'];
+    protected $fillable = ['user_id', 'plan_id','plan_duration', 'start_date', 'end_date', 'cancelled_at', 'status'];
+    protected $hidden = ['created_at', 'updated_at'];
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -23,4 +24,10 @@ class Subscription extends Model
             ->withTimestamps()
             ->withPivot('used_at');
     }
+
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date'   => 'datetime',
+        'cancelled_at' => 'datetime',
+    ];
 }

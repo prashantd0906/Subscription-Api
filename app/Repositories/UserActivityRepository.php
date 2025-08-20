@@ -32,4 +32,9 @@ class UserActivityRepository implements UserActivityRepositoryInterface
 
         return $query->orderBy('created_at', 'desc')->get();
     }
+
+    public function getAll()
+    {
+        return $this->getUserActivities();
+    }
 }

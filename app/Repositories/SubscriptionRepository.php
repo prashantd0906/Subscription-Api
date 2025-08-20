@@ -8,9 +8,11 @@ use App\Interfaces\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    public function getAll()
+    public function getall() // use custom function in place of all.
     {
-        return SubscriptionPlan::all();
+        return SubscriptionPlan::select('id','name','price','duration')
+        ->orderBy('name','asc')
+        ->get();
     }
 
     public function subscribe(int $userId, int $planId): Subscription
@@ -28,27 +30,29 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
             'status'     => 'active',
         ]);
     }
-    
+
     public function create(array $data)
     {
         return Subscription::create($data);
     }
 
-    public function cancel(int $userId)
+    public function cancel(int $userId, int $planId): ?Subscription
     {
-        $subscription = $this->getActive($userId);
+        $subscription = Subscription::where('user_id', $userId)
+            ->where('plan_id', $planId)
+            ->where('status', 'active')
+            ->first();
 
-        if (!$subscription) {
-            return response()->json(['message' => 'No active subscription found.'], 404);
+        if ($subscription) {
+            $subscription->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+            ]);
         }
-
-        $subscription->update([
-            'status'       => 'cancelled',
-            'cancelled_at' => now(),
-        ]);
 
         return $subscription;
     }
+
 
     public function getActive(int $userId)
     {

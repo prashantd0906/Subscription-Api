@@ -13,10 +13,10 @@
 }
 
 
-
 | Method | URL                     | Access     |
 | ------ | ----------------------- | ---------- |
 | GET    | /v1/subscription/plans  | User (JWT) |
+| GET    | /v2/promo-codes         | User & Admin 
 | POST   | /v1/subscription        | User (JWT) |
 | POST   | /v1/subscription/cancel | User (JWT) |
 | GET    | /v1/subscription/active | User (JWT) |
@@ -27,6 +27,7 @@
 | GET    | /v1/user/activity       | User (JWT)  |
 | GET    | /v1/admin/user-activity | Admin (JWT) |
 
+//active_plan api
 
 | Method | URL                     | Access |
 | ------ | ----------------------- | ------ |
@@ -64,7 +65,7 @@ PUT
 
 | Method | URL                    | Access       |
 | ------ | ---------------------- | ------------ |
-| GET    | /v2/promo-codes        | User & Admin |
+| |
 | POST   | /v2/promo-codes        | Admin        |
 | PUT    | /v2/promo-codes/{id}   | Admin        |
 | DELETE | /v2/promo-codes/{id}   | Admin        |
@@ -92,3 +93,19 @@ POST
 
 
 
+public function cancel(int $userId)
+    {
+        $subscription = $this->subscriptionRepository->getActive($userId);
+
+        if ($subscription) {
+            $this->subscriptionRepository->cancel($userId);
+
+            $this->activityService->log(
+                $userId,
+                'subscription_cancelled',
+                "Cancelled subscription for plan ID {$subscription->plan_id}"
+            );
+        }
+
+        return $subscription;
+    }

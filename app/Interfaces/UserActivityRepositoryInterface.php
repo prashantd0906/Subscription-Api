@@ -4,5 +4,5 @@ namespace App\Interfaces;
 interface UserActivityRepositoryInterface
 {
     public function log(int $userId, string $action, string $description): void;
-    public function getUserActivities(int $userId);
+    public function getUserActivities(?int $userId = null);
 }
