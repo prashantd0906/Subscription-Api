@@ -4,14 +4,16 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use App\Models\User;
+use App\Models\SubscriptionPlan;
 
 class SubscriptionNotification extends Notification
 {
     use Queueable;
 
     public function __construct(
-        protected $user,
-        protected $plan
+        protected User $user,
+        protected SubscriptionPlan $plan
     ) {}
 
     public function via($notifiable)
