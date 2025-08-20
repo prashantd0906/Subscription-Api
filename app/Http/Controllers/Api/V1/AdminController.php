@@ -8,7 +8,6 @@ use App\Services\SubscriptionPlanService;
 use App\Services\UserActivityService;
 use Illuminate\Http\JsonResponse;
 use App\Helpers\ApiResponse;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
@@ -20,38 +19,6 @@ class AdminController extends Controller
         protected UserActivityService $activityService
     ) {}
 
-    /**
-     * Fetch all admin notifications
-     */
-    public function notifications(): JsonResponse
-    {
-        $admin = Auth::user();
-
-        // Fetch latest notifications
-        $notifications = $admin->notifications()->latest()->get();
-
-        // Transform for cleaner JSON
-        $data = $notifications->map(function ($notification) {
-            return [
-                'id'              => $notification->id,
-                'subscriber_name' => $notification->data['subscriber_name'] ?? null,
-                'plan_name'       => $notification->data['plan_name'] ?? null,
-                'action'          => $notification->data['action'] ?? null,
-                'timestamp'       => $notification->data['timestamp'] ?? null,
-                'created_at'      => $notification->created_at->toDateTimeString(),
-                'read_at'         => $notification->read_at?->toDateTimeString(),
-            ];
-        });
-
-        return ApiResponse::success([
-            'count' => $data->count(),
-            'data'  => $data,
-        ], 'Admin notifications fetched successfully');
-    }
-
-    /**
-     * Dashboard stats for admin
-     */
     public function dashboard(): JsonResponse
     {
         // Count all subscription-related activities
@@ -69,9 +36,6 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Manage subscription plans
-     */
     public function index(): JsonResponse
     {
         return ApiResponse::success(

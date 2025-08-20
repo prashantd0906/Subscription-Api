@@ -6,11 +6,11 @@ use App\Models\SubscriptionPlan;
 use App\Repositories\SubscriptionRepository;
 use App\Services\PromoCodeService;
 use App\Services\UserActivityService;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\NewSubscriptionNotification;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\SubscriptionNotification;
 
 class SubscriptionService
 {
@@ -62,14 +62,15 @@ class SubscriptionService
             $subscription->promoCodes()->attach($promo->id, ['used_at' => now()]);
         }
 
-        // ✅ Notify all admins
-        $this->notifyAdmins($user->name, $plan->name, 'started');
+        // 🔔 Notify all admins
+        $admins = User::where('role_id', 1)->get();
+        Notification::send($admins, new SubscriptionNotification($user, $plan, 'started'));
 
         return [
             'success'          => true,
             'message'          => $promo
                 ? "Subscribed successfully with promo code {$promo->code} applied."
-                : 'Subscribed successfully',
+                : "Subscribed successfully to {$plan->name}.",
             'original_price'   => $plan->price,
             'discount_applied' => $discountApplied,
             'final_price'      => $finalPrice,
@@ -95,11 +96,14 @@ class SubscriptionService
                 "Cancelled subscription for plan ID {$planId}"
             );
 
-            // ✅ Notify admins of cancellation
-            $subscriber = User::find($userId);
-            $planName   = $subscription->plan->name ?? 'Unknown Plan';
-
-            $this->notifyAdmins($subscriber?->name ?? 'Unknown User', $planName, 'cancelled');
+            // 🔔 Notify admins
+            $user = User::find($userId);
+            $admins = User::where('role_id', 1)->get();
+            Notification::send($admins, new SubscriptionNotification(
+                $user,
+                $subscription->plan,
+                'cancelled'
+            ));
         }
 
         return $subscription;
@@ -148,20 +152,5 @@ class SubscriptionService
             'end_date'      => $end,
             'status'        => 'active',
         ]);
-    }
-
-    /**
-     * Notify all admins about a subscription event
-     */
-    private function notifyAdmins(string $subscriberName, string $planName, string $action): void
-    {
-        $admins = User::where('role_id', 1)->get();
-
-        if ($admins->isNotEmpty()) {
-            Notification::send(
-                $admins,
-                new NewSubscriptionNotification($subscriberName, $planName, $action)
-            );
-        }
     }
 }
