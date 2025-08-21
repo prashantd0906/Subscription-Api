@@ -13,7 +13,7 @@ class SubscriptionPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255','unique:subscription_plans,name',
+            'name' => 'required|regex:/^[a-zA-Z\s]+$/|max:255','unique:subscription_plans,name',
             'price' => 'required|numeric|min:0','regex:/^\d+(\.\d{1,2})?$/', //upto 2 decimal place
             'duration' => 'required|integer|min:1',
         ];

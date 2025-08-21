@@ -10,14 +10,14 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Api\V2\PromoCodeController;
 use App\Http\Controllers\Api\V2\SubscriptionPromoCodeController;
 
-//  V1 API
+//V1 
 Route::prefix('v1')->group(function () {
 
-    // Public Auth routes
+    // Auth routes
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
 
-    // Protected routes (JWT required)
+    // routes token required
     Route::middleware('jwt.auth')->group(function () {
 
         // Authenticated user routes
@@ -69,7 +69,7 @@ Route::prefix('v1')->group(function () {
 // V2 API (Promo Codes)
 Route::prefix('v2')->middleware('jwt.auth')->group(function () {
 
-    // Accessible by both users & admins
+    // Accessed by both users & admins
     Route::get('/promo-codes', [PromoCodeController::class, 'index']);
 
     // Admin-only

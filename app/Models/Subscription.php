@@ -6,8 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subscription extends Model
 {
-    protected $fillable = ['user_id', 'plan_id','plan_duration', 'start_date', 'end_date', 'cancelled_at', 'status'];
-    protected $hidden = ['created_at', 'updated_at'];
+    protected $fillable = [
+        'user_id',
+        'plan_id',
+        'plan_duration',
+        'start_date',
+        'end_date',
+        'cancelled_at',
+        'status',
+    ];
+
+    protected $hidden = ['updated_at'];  // Hide fields in API responses
+
+    protected $casts = [
+        'start_date'   => 'datetime',
+        'end_date'     => 'datetime',
+        'cancelled_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -20,14 +36,12 @@ class Subscription extends Model
 
     public function promoCodes()
     {
-        return $this->belongsToMany(PromoCode::class, 'subscription_promo_codes')
-            ->withTimestamps()
-            ->withPivot('used_at');
+        return $this->belongsToMany(
+            PromoCode::class,
+            'subscription_promo_codes',
+            'subscription_id',
+            'promo_code_id'
+        )->withPivot('used_at')
+            ->withTimestamps();
     }
-
-    protected $casts = [
-        'start_date' => 'datetime',
-        'end_date'   => 'datetime',
-        'cancelled_at' => 'datetime',
-    ];
 }

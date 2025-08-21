@@ -45,8 +45,7 @@ class SubscriptionController extends Controller
         return ApiResponse::error('Unauthenticated', 401);
     }
 
-    // Get validated plan_id from request
-    $planId = $request->validated()['plan_id'];
+    $planId = $request->validated()['plan_id'];   // Get plan_id from request
 
     $subscription = $this->service->cancel($userId, $planId);
 

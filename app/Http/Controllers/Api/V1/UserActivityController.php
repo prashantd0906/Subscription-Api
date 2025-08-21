@@ -10,15 +10,13 @@ class UserActivityController extends Controller
 {
     public function __construct(protected UserActivityService $activityService) {}
 
-    // Fetch authenticated user's activity
-    public function myActivity(): JsonResponse
+    public function myActivity(): JsonResponse    // Fetch authenticated user's activity
     {
         $activities = $this->activityService->getUserActivities(Auth::id());
         return response()->json(['data' => $activities]);
     }
 
-    // For admins: fetch all users' activities
-    public function allActivities(): JsonResponse
+    public function allActivities(): JsonResponse   // For admins: fetch all users' activities
     {
         $activities = $this->activityService->getUserActivities(null); 
         return response()->json(['data' => $activities]);

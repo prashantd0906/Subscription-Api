@@ -10,8 +10,9 @@ class IsAdmin
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
+        $adminRoleId = 2;
 
-        if (!$user || $user->role?->name !== 'admin') { // use id inplace of name
+        if (!$user || $user->role_id !== $adminRoleId) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

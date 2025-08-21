@@ -74,7 +74,7 @@ PUT
 {
     "promo_code": "CCUBE50",
     "discount": 50,
-    "valid_till": "2025-10-31T23:59:59Z"
+    "valid_till": "2025-10-31"
 }
 
 

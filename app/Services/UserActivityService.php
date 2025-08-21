@@ -13,7 +13,7 @@ class UserActivityService
     {
         return $this->repo->getUserActivities();
     }
-    // Log a user action
+    
     public function log(int $userId, string $action, string $description): void
     {
         $this->repo->log($userId, $action, $description);

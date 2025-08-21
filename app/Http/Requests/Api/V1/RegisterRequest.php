@@ -29,8 +29,8 @@ class RegisterRequest extends FormRequest
                 'required',          
                 'string',           
                 'min:6',             
-                'confirmed',         // must match password_confirmation
-                'not_regex:/^\s*$/'  // cannot be empty or spaces only
+                'confirmed',        
+                'not_regex:/^\s*$/'
             ],
         ];
     }
