@@ -2,30 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Interfaces\ReportRepositoryInterface;
+use App\Services\ReportService;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly ReportRepositoryInterface $reportRepo) {}
+    public function __construct(private readonly ReportService $reportService) {}
 
-    public function totalUsersPerPlan()
+    public function summary()
     {
-        return response()->json($this->reportRepo->getTotalUserPlan());
-    }
-
-    public function activeSubscriptionsPerPlan()
-    {
-        return response()->json($this->reportRepo->getActiveSubscriptionsPerPlan());
-    }
-
-    public function monthlyNewSubscriptions()
-    {
-        return response()->json($this->reportRepo->getMonthlyNewSubscriptions());
-    }
-
-    public function planChurnRate()
-    {
-        return response()->json($this->reportRepo->getPlanChurnRate());
+        return ApiResponse::success(
+            $this->reportService->getSummary(),
+            'Reports summary fetched successfully'
+        );
     }
 }

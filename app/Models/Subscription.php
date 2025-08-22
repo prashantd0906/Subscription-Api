@@ -38,7 +38,7 @@ class Subscription extends Model
     {
         return $this->belongsToMany(
             PromoCode::class,
-            'subscription_promo_codes',
+            'subscription_promo_codes', //pivot table
             'subscription_id',
             'promo_code_id'
         )->withPivot('used_at')

@@ -11,7 +11,7 @@ use App\Helpers\ApiResponse;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
-use App\Models\Notification; 
+use App\Models\Notification;
 
 
 class AdminController extends Controller
@@ -56,17 +56,29 @@ class AdminController extends Controller
     {
         $plan = $this->service->update($id, $request->validated());
 
+        if (!$plan) {
+            return ApiResponse::error("No plan found with id {$id}", 404);
+        }
+
         return ApiResponse::success($plan, 'Plan updated successfully');
     }
 
     public function destroy(int $id): JsonResponse
     {
+        $plan = $this->service->find($id);
+
+        if (!$plan) {
+            return ApiResponse::error('', 404, "Plan with ID {$id} not found");
+        }
+
         $this->service->delete($id);
 
-        return ApiResponse::success(null, 'Plan deleted successfully');
+        return ApiResponse::success('', 'Plan deleted successfully');
     }
 
-        public function notifications(): JsonResponse
+
+
+    public function notifications(): JsonResponse
     {
         $notifications = Notification::latest()->get();
 

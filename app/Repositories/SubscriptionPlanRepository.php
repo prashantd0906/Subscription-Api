@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Models\SubscriptionPlan;
@@ -13,7 +14,7 @@ class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInterface
 
     public function find($id)
     {
-        return SubscriptionPlan::findOrFail($id);
+        return SubscriptionPlan::find($id);
     }
 
     public function create(array $data)
@@ -23,13 +24,22 @@ class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInterface
 
     public function update($id, array $data)
     {
-        $plan = SubscriptionPlan::findOrFail($id);
+        $plan = SubscriptionPlan::find($id);
+        if (!$plan) {
+            return null;
+        }
         $plan->update($data);
         return $plan;
     }
 
     public function delete($id)
     {
-        return SubscriptionPlan::destroy($id);
+        $plan = SubscriptionPlan::find($id);
+        if (!$plan) {
+            return null;
+        }
+
+        $plan->delete();
+        return true;
     }
 }

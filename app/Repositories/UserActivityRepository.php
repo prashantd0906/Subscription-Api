@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Interfaces\UserActivityRepositoryInterface;
@@ -9,16 +10,14 @@ class UserActivityRepository implements UserActivityRepositoryInterface
 {
     public function log(int $userId, string $action, string $description): void
     {
-        //fetch user by ID
-        $user = User::find($userId);
+        $user = User::find($userId); //fetch user by ID
 
-        //If user not found
-        $userName = $user ? $user->name : 'Unknown User';
+        $userName = $user ? $user->name : 'Unknown User'; //If user not found
 
         UserActivity::create([
             'user_id'    => $userId,
             'action'     => $action,
-            'description'=> $userName . ' ' . $description,
+            'description' => $userName . ' ' . $description,
         ]);
     }
 

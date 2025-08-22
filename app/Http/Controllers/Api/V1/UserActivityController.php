@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -18,7 +19,7 @@ class UserActivityController extends Controller
 
     public function allActivities(): JsonResponse   // For admins: fetch all users' activities
     {
-        $activities = $this->activityService->getUserActivities(null); 
+        $activities = $this->activityService->getUserActivities(null);
         return response()->json(['data' => $activities]);
     }
 }

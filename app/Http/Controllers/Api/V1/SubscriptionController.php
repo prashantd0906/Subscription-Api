@@ -39,22 +39,22 @@ class SubscriptionController extends Controller
     }
 
     public function cancel(CancelSubscriptionRequest $request): JsonResponse
-{
-    $userId = Auth::id();
-    if (!$userId) {
-        return ApiResponse::error('Unauthenticated', 401);
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return ApiResponse::error('Unauthenticated', 401);
+        }
+
+        $planId = $request->validated()['plan_id'];   // Get plan_id from request
+
+        $subscription = $this->service->cancel($userId, $planId);
+
+        if (!$subscription) {
+            return ApiResponse::error('No active subscription found for this plan', 404);
+        }
+
+        return ApiResponse::success(['subscription' => $subscription], 'Subscription cancelled successfully');
     }
-
-    $planId = $request->validated()['plan_id'];   // Get plan_id from request
-
-    $subscription = $this->service->cancel($userId, $planId);
-
-    if (!$subscription) {
-        return ApiResponse::error('No active subscription found for this plan', 404);
-    }
-
-    return ApiResponse::success(['subscription' => $subscription], 'Subscription cancelled successfully');
-}
 
 
     public function active(): JsonResponse

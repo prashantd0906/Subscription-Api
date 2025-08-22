@@ -31,7 +31,7 @@ class SubscriptionService
 
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);
 
-        //Check if user already has an active subscription
+        //Check if user already has an subscription
         $existing = $this->subscriptionRepository->getActive($user->id);
         if ($existing && $existing->plan_id == $plan->id) {
             return [
@@ -50,7 +50,7 @@ class SubscriptionService
             return ['success' => false, 'message' => $error];
         }
 
-        // Cancel previous subscription if it's a different plan
+        // Cancel previous subscription 
         if ($existing) {
             $this->cancelPrevious($user->id);
         }
@@ -108,10 +108,30 @@ class SubscriptionService
                 'action'     => 'subscription_cancelled',
                 'description' => "User {$subscription->user->name} cancelled {$subscription->plan->name} plan.",
             ]);
+
+            // Log notification
+            NotificationModel::create([
+                'user_id' => $userId,
+                'type'    => 'subscription_cancelled',
+                'message' => "You have cancelled your {$subscription->plan->name} plan.",
+            ]);
+
+            // Notify all admins
+            $adminRoleId = 2;
+            $admins = \App\Models\User::where('role_id', $adminRoleId)->get();
+
+            foreach ($admins as $admin) {
+                NotificationModel::create([
+                    'user_id' => $admin->id,
+                    'type'    => 'user_subscription_cancelled',
+                    'message' => "User {$subscription->user->name} cancelled {$subscription->plan->name} plan.",
+                ]);
+            }
         }
 
         return $subscription;
     }
+
 
     public function getActive(int $userId)
     {

@@ -8,7 +8,7 @@ use App\Interfaces\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    
+
     public function getAll()
     {
         return SubscriptionPlan::select('id', 'name', 'price', 'duration')

@@ -42,8 +42,7 @@ POST
 {
     "name": "Premium Plan",
     "price": 49.99,
-    "duration": 30,
-    "description": "Access to all premium features for 30 days."
+    "duration": 30
 }
 
 

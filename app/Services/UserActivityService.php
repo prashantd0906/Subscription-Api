@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Interfaces\UserActivityRepositoryInterface;
@@ -13,7 +14,7 @@ class UserActivityService
     {
         return $this->repo->getUserActivities();
     }
-    
+
     public function log(int $userId, string $action, string $description): void
     {
         $this->repo->log($userId, $action, $description);

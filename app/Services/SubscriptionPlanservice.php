@@ -31,6 +31,20 @@ class SubscriptionPlanService
 
     public function delete($id)
     {
-        return $this->repo->delete($id);
+        $result = $this->repo->delete($id);
+
+        if (!$result) {
+            return [
+                'success' => false,
+                'message' => "Subscription plan with id {$id} not found.",
+                'data'    => null
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Plan deleted successfully',
+            'data'    => null
+        ];
     }
 }

@@ -20,16 +20,16 @@ class RegisterRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
-                'email:rfc,dns', 
+                'email:rfc,dns',
                 'max:255',
                 'unique:users,email',
                 'regex:/^[a-zA-Z][\w.-]*@[a-zA-Z][\w.-]*\.[a-zA-Z]{2,}$/'
             ],
             'password' => [
-                'required',          
-                'string',           
-                'min:6',             
-                'confirmed',        
+                'required',
+                'string',
+                'min:6',
+                'confirmed',
                 'not_regex:/^\s*$/'
             ],
         ];
