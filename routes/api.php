@@ -10,14 +10,13 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\Api\V2\PromoCodeController;
 use App\Http\Controllers\Api\V2\SubscriptionPromoCodeController;
 
-//V1 
+// V1 
 Route::prefix('v1')->group(function () {
 
     // Auth routes
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
 
-    // routes token required
     Route::middleware('jwt.auth')->group(function () {
 
         // Authenticated user routes
@@ -37,14 +36,14 @@ Route::prefix('v1')->group(function () {
             Route::get('activity', [UserActivityController::class, 'myActivity']); // user own activity
         });
 
-        // Admin routes (requires admin)
+        // Admin routes
         Route::prefix('admin')->middleware(IsAdmin::class)->group(function () {
 
             // Dashboard & notifications
             Route::get('dashboard', [AdminController::class, 'dashboard']);
             Route::get('notifications', [AdminController::class, 'notifications']);
 
-            // Plan management
+            // Plans
             Route::prefix('plans')->group(function () {
                 Route::get('/', [AdminController::class, 'index']);
                 Route::post('/', [AdminController::class, 'store']);
@@ -56,17 +55,14 @@ Route::prefix('v1')->group(function () {
             Route::get('user-activity', [UserActivityController::class, 'allActivities']);
         });
 
-        // Reports routes (admins only)
+        // Admin Reports
         Route::prefix('reports')->middleware(IsAdmin::class)->group(function () {
-            Route::get('/total-users', [ReportController::class, 'totalUsersPerPlan']);
-            Route::get('/active-subscriptions', [ReportController::class, 'activeSubscriptionsPerPlan']);
-            Route::get('/monthly-new-subscriptions', [ReportController::class, 'monthlyNewSubscriptions']);
-            Route::get('/churn-rate', [ReportController::class, 'planChurnRate']);
+            Route::get('/summary', [ReportController::class, 'summary']);
         });
     });
 });
 
-// V2 API (Promo Codes)
+// V2
 Route::prefix('v2')->middleware('jwt.auth')->group(function () {
 
     // Accessed by both users & admins
