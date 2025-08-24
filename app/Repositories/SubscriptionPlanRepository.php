@@ -9,7 +9,10 @@ class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInterface
 {
     public function getAll()
     {
-        return SubscriptionPlan::all();
+        return SubscriptionPlan::query()
+            ->select('id', 'name', 'price', 'duration', 'created_at', 'updated_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
     public function find($id)

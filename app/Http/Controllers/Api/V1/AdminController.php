@@ -24,7 +24,7 @@ class AdminController extends Controller
     public function dashboard(): JsonResponse
     {
         $notificationsCount = $this->activityService       // count all subscription activity
-            ->getAll()
+            ->getUserActivities()
             ->whereIn('action', ['subscription_started', 'subscription_cancelled'])
             ->count();
 
@@ -75,8 +75,6 @@ class AdminController extends Controller
 
         return ApiResponse::success('', 'Plan deleted successfully');
     }
-
-
 
     public function notifications(): JsonResponse
     {

@@ -53,6 +53,7 @@ Route::prefix('v1')->group(function () {
 
             // Admin view all user activities
             Route::get('user-activity', [UserActivityController::class, 'allActivities']);
+            Route::get('user-activity/{userId}', [UserActivityController::class, 'userActivities']);
         });
 
         // Admin Reports

@@ -5,16 +5,17 @@ namespace App\Services;
 use App\Models\SubscriptionPlan;
 use App\Repositories\SubscriptionRepository;
 use App\Services\PromoCodeService;
+use App\Services\UserActivityService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification as NotificationModel;
-use App\Models\UserActivity;
 use Carbon\Carbon;
 
 class SubscriptionService
 {
     public function __construct(
         protected SubscriptionRepository $subscriptionRepository,
-        protected PromoCodeService $promoCodeService
+        protected PromoCodeService $promoCodeService,
+        protected UserActivityService $userActivityService
     ) {}
 
     public function getAllPlans()
@@ -31,7 +32,7 @@ class SubscriptionService
 
         $plan = SubscriptionPlan::findOrFail($data['plan_id']);
 
-        //Check if user already has an subscription
+        // Check if user already has a subscription
         $existing = $this->subscriptionRepository->getActive($user->id);
         if ($existing && $existing->plan_id == $plan->id) {
             return [
@@ -63,12 +64,12 @@ class SubscriptionService
             $subscription->promoCodes()->attach($promo->id, ['used_at' => now()]);
         }
 
-        // Log user activity
-        UserActivity::create([
-            'user_id'     => $user->id,
-            'action'      => 'subscription_started',
-            'description' => "{$user->name} subscribed to {$plan->name} plan.",
-        ]);
+        // Log user activity via service
+        $this->userActivityService->log(
+            $user->id,
+            'subscription_started',
+            "{$user->name} subscribed to {$plan->name} plan."
+        );
 
         // Log notification for user
         NotificationModel::create([
@@ -89,7 +90,6 @@ class SubscriptionService
         ];
     }
 
-
     public function cancel(int $userId, int $planId)
     {
         $subscription = $this->subscriptionRepository->cancel($userId, $planId);
@@ -102,12 +102,12 @@ class SubscriptionService
                 'status'       => 'cancelled',
             ]);
 
-            // Log user activity
-            UserActivity::create([
-                'user_id'    => $userId,
-                'action'     => 'subscription_cancelled',
-                'description' => "User {$subscription->user->name} cancelled {$subscription->plan->name} plan.",
-            ]);
+            // Log user activity via service
+            $this->userActivityService->log(
+                $userId,
+                'subscription_cancelled',
+                "User {$subscription->user->name} cancelled {$subscription->plan->name} plan."
+            );
 
             // Log notification
             NotificationModel::create([
@@ -116,7 +116,7 @@ class SubscriptionService
                 'message' => "You have cancelled your {$subscription->plan->name} plan.",
             ]);
 
-            // Notify all admins
+            // Notify admins
             $adminRoleId = 2;
             $admins = \App\Models\User::where('role_id', $adminRoleId)->get();
 
@@ -131,7 +131,6 @@ class SubscriptionService
 
         return $subscription;
     }
-
 
     public function getActive(int $userId)
     {
@@ -167,12 +166,12 @@ class SubscriptionService
             'end_date'     => now()->addDays($previous->plan_duration),
         ]);
 
-        // Log user activity
-        UserActivity::create([
-            'user_id'    => $userId,
-            'action'     => 'subscription_cancelled',
-            'description' => "User {$previous->user->name} cancelled {$previous->plan->name} plan.",
-        ]);
+        // Log user activity via service
+        $this->userActivityService->log(
+            $userId,
+            'subscription_cancelled',
+            "User {$previous->user->name} cancelled {$previous->plan->name} plan."
+        );
     }
 
     private function createSubscription(int $userId, SubscriptionPlan $plan)

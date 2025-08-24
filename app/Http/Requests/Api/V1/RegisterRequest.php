@@ -35,7 +35,7 @@ class RegisterRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    public function messages(): array //if validations fails it gives custom messages
     {
         return [
             'password.not_regex' => 'The password cannot be empty or just spaces.',
